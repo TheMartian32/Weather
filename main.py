@@ -1,8 +1,3 @@
-import pyowm
-from rich import print
-import pytz
-import re
-
 """
 A simple script to find the weather of a given city in a country.
 
@@ -15,81 +10,61 @@ Set up will_rain method, and come up with a repeat message using the repeat snip
 
 """
 
-owm = pyowm.OWM('API key') # TODO: Put your open weather api key here.
+import pyowm
+from rich import print
 
 
-class UI_Inputs():
+def ask_for(prompt, error_msg=None, _type=None):
+    """ While the desired prompt is not given, it repeats the prompt. """
+    while True:
+        inp = input(prompt).strip()
+        if not inp:
+            if error_msg:
+                print(error_msg)
+            continue
 
-    """
-    A class responsible for the inputs in the UI and basically anything that requires
-    either the UI or inputs.
-    """
-
-    def ask_for(self, prompt, error_msg=None, _type=None):
-        """ While the desired prompt is not given, it repeats the prompt. """
-        while True:
-            inp = input(prompt).strip()
-            if not inp:
+        if _type:
+            try:
+                inp = _type(inp)
+            except ValueError:
                 if error_msg:
                     print(error_msg)
                 continue
-
-            if _type:
-                try:
-                    inp = _type(inp)
-                except ValueError:
-                    if error_msg:
-                        print(error_msg)
-                    continue
-            return inp
+        return inp
 
 
-ask = UI_Inputs()
+def dynamic_weather():
+    """
+    A weather method to dynamically adjust
+    to whatever the user needs.
+    """
 
+    owm = pyowm.OWM('69b10ec96289a50844dfe3a39e28670f')
 
-class Weather():
+    supported_types = ['sunrise', 'sunset',
+                       'local weather', 'rain', 'fog', 'clouds']
 
-    #! Do not use, will be deprecated soon.
-    def current_temp(self):
+    print(
+        '\n[cyan]Forecast[/cyan] only goes up to [bold underline]three hours away[/bold underline] and all [bold underline]times are in GMT[/bold underline].')
+    print('\nWhat [cyan]weather information[/cyan] do you want to get? (e.g, [red]rain[/red], [bold]fog[/bold], [yellow]sunrise/set[/yellow], etc.)',)
+    what_weather = ask_for('\n: ', 'Error', str).lower()
+    print(
+        '\nPlease provide the [underline]city, then country. (e.g Napa, US)[/underline]')
+    city = ask_for('\n: ', 'Error', str)
+    country = ask_for('\n: ', 'Error', str)
+    # timezone = ask_for('\n: ', 'Error', str)
 
-        print(
-            '\nWhat [green]city[/green] do you want to get the [cyan]weather[/cyan] from?')
+    location = owm.weather_at_place(f'{city},{country}')
+    weather = location.get_weather()
 
-        city = ask.ask_for(
-            '\n: ', "Couldn't find the weather for that city.", str)
+    if what_weather in supported_types[0]:
+        # * GMT timezone
+        print('\nThe [yellow]sun will rise[/yellow] at: ')
+        #usr_timezone = pytz.timezone(f'{country}/{city}')
+        print(weather.get_sunrise_time(timeformat='iso'))
+    else:
+        print('\nNot [bold]supported[/bold]')
 
-        print(
-            '\nwhat [green]country[/green] do you want to get the [cyan]weather[/cyan] from?')
-        country = ask.ask_for('\n: ',
-                              "Couldn't find the weather for that country.", str)
-
-        try:
-            city_country = owm.weather_at_place(f'{city}, {country}')
-            weather = city_country.get_weather()
-            print('\nThis is the [green]current temperature[/green] :')
-            current_temp = print(weather.get_temperature('fahrenheit')['temp'])
-            return current_temp
-        except:
-            print(
-                '\nAn [bold red]error[/bold red] occurred, could not find the [cyan]weather[/cyan].')
-
-    def dynamic_weather(self):
-
-        print(
-            '\n[cyan]Forecast[/cyan] only goes up to [bold underline]three hours away[/bold underline].')
-        print('\nWhat [cyan]weather information[/cyan] do you want to get? (e.g, [red]rain[/red], [bold]fog[/bold], [yellow]sunrise/set[/yellow], etc.)',)
-        what_weather = ask.ask_for('\n: ', 'Error', str)
-        print(
-            '\nPlease provide the [underline]city, then country.[/underline]')
-        city = ask.ask_for('\n: ', 'Error', str)
-        country = ask.ask_for('\n: ', 'Error', str)
-
-        location = owm.weather_at_place(f'{city},{country}')
-        weather = location.get_weather()
-
-
-
-weather = Weather()
 
 if __name__ == '__main__':
-    weather.dynamic_weather()
+    dynamic_weather()
