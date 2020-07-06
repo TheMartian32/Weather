@@ -49,6 +49,7 @@ ask = UI_Inputs()
 
 class Weather():
 
+    #! Do not use, will be deprecated soon.
     def current_temp(self):
 
         print(
