@@ -1,12 +1,21 @@
 import pyowm
-from rich import print 
+from rich import print
+import pytz
+import re
 
 """
 A simple script to find the weather of a given city in a country.
 
 Returns:
     Float : Weather in fahrenheit.
+
+Notes:
+
+Set up will_rain method, and come up with a repeat message using the repeat snippet.
+
 """
+
+owm = pyowm.OWM('API key') # TODO: Put your open weather api key here.
 
 
 class UI_Inputs():
@@ -40,10 +49,11 @@ ask = UI_Inputs()
 
 class Weather():
 
-    def current_local_temp(self):
+    def current_temp(self):
 
         print(
             '\nWhat [green]city[/green] do you want to get the [cyan]weather[/cyan] from?')
+
         city = ask.ask_for(
             '\n: ', "Couldn't find the weather for that city.", str)
 
@@ -53,7 +63,6 @@ class Weather():
                               "Couldn't find the weather for that country.", str)
 
         try:
-            owm = pyowm.OWM('69b10ec96289a50844dfe3a39e28670f')
             city_country = owm.weather_at_place(f'{city}, {country}')
             weather = city_country.get_weather()
             print('\nThis is the [green]current temperature[/green] :')
@@ -61,10 +70,25 @@ class Weather():
             return current_temp
         except:
             print(
-                '\nAn [red]error[/red] occurred, could not find the [cyan]weather[/cyan].')
+                '\nAn [bold red]error[/bold red] occurred, could not find the [cyan]weather[/cyan].')
+
+    def dynamic_weather(self):
+
+        print(
+            '\n[cyan]Forecast[/cyan] only goes up to [bold underline]three hours away[/bold underline].')
+        print('\nWhat [cyan]weather information[/cyan] do you want to get? (e.g, [red]rain[/red], [bold]fog[/bold], [yellow]sunrise/set[/yellow], etc.)',)
+        what_weather = ask.ask_for('\n: ', 'Error', str)
+        print(
+            '\nPlease provide the [underline]city, then country.[/underline]')
+        city = ask.ask_for('\n: ', 'Error', str)
+        country = ask.ask_for('\n: ', 'Error', str)
+
+        location = owm.weather_at_place(f'{city},{country}')
+        weather = location.get_weather()
+
 
 
 weather = Weather()
 
 if __name__ == '__main__':
-    weather.current_local_temp()
+    weather.dynamic_weather()
