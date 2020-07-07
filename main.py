@@ -13,6 +13,8 @@ Set up will_rain method, and come up with a repeat message using the repeat snip
 import pyowm
 from rich import print
 
+OWM = pyowm.OWM('69b10ec96289a50844dfe3a39e28670f')
+
 
 def ask_for(prompt, error_msg=None, _type=None):
     """ While the desired prompt is not given, it repeats the prompt. """
@@ -33,38 +35,104 @@ def ask_for(prompt, error_msg=None, _type=None):
         return inp
 
 
-def dynamic_weather():
+class GetWeather():
     """
-    A weather method to dynamically adjust
-    to whatever the user needs.
+    Getting weather by using the Open Weather API
     """
 
-    owm = pyowm.OWM('69b10ec96289a50844dfe3a39e28670f')
+    def __init__(self, city=None, country=None, timzone=None):
+        self.city = city
+        self.country = country
+        self.timezone = timzone
 
-    supported_types = ['sunrise', 'sunset',
-                       'local weather', 'rain', 'fog', 'clouds']
+    def weather(self):
+        """
+        Getting everything needed to present the user with the
+        weather or any other information they request.
+        """
 
-    print(
-        '\n[cyan]Forecast[/cyan] only goes up to [bold underline]three hours away[/bold underline] and all [bold underline]times are in GMT[/bold underline].')
-    print('\nWhat [cyan]weather information[/cyan] do you want to get? (e.g, [red]rain[/red], [bold]fog[/bold], [yellow]sunrise/set[/yellow], etc.)',)
-    what_weather = ask_for('\n: ', 'Error', str).lower()
-    print(
-        '\nPlease provide the [underline]city, then country. (e.g Napa, US)[/underline]')
-    city = ask_for('\n: ', 'Error', str)
-    country = ask_for('\n: ', 'Error', str)
-    # timezone = ask_for('\n: ', 'Error', str)
+        # * Location
+        print(
+            '\nPlease provide the [cyan underline]city, country, then timezone. (e.g Napa, US, PST)[/cyan underline]')
+        self.city = ask_for('\n: ', 'Error', str)
+        self.country = ask_for('\n: ', 'Error', str)
+        self.timezone = ask_for('\n: ', 'Error', str)
 
-    location = owm.weather_at_place(f'{city},{country}')
-    weather = location.get_weather()
+        location = OWM.weather_at_place(f'{self.city},{self.country}')
+        weather = location.get_weather()
 
-    if what_weather in supported_types[0]:
-        # * GMT timezone
-        print('\nThe [yellow]sun will rise[/yellow] at: ')
-        #usr_timezone = pytz.timezone(f'{country}/{city}')
-        print(weather.get_sunrise_time(timeformat='iso'))
-    else:
-        print('\nNot [bold]supported[/bold]')
+        def get_weather():
+            """
+            A weather method to dynamically adjusts
+            to whatever the user needs.
+            """
 
+            supported_types = ['sunrise', 'sunset',
+                               'local weather', 'weather', 'rain', 'fog', 'clouds']
+
+            # * Asking user what type of weather information they need
+            print(
+                '\n[cyan]Forecast[/cyan] only goes up to [bold underline]three hours away[/bold underline] and all [bold underline]times are in GMT[/bold underline].')
+            print('\nWhat [cyan]weather information[/cyan] do you want to get? (e.g, [red]rain[/red], [bold]fog[/bold], [yellow]sunrise/set[/yellow], etc.)',)
+            what_weather = ask_for('\n: ', 'Error', str).lower()
+
+            # * Checking what user inputted into the script
+            # * Sunrise
+            if what_weather in supported_types[0]:
+
+                # * GMT timezone
+                print('\nThe [yellow]sun will rise[/yellow] at: ')
+                print(weather.get_sunrise_time(timeformat='iso'))
+
+            # * Sunset
+            if what_weather in supported_types[1]:
+
+                print('\nThe [yellow]sun will set[/yellow] at: ')
+                print(weather.get_sunset_time(timeformat='iso'))
+
+            # * Local weather
+            if what_weather in supported_types[2] or supported_types[3]:
+
+                print('\nFahrenheit [bold]or[/bold] Celsius? (Type c or f)')
+                c_or_f = ask_for('\n: ', 'Error', str).lower()
+
+                if c_or_f == 'f':
+
+                    print('\nThe [cyan]weather[/cyan] is:')
+                    print(weather.get_temperature('fahrenheit')['temp'])
+
+                if c_or_f == 'c':
+
+                    print('\nThe [cyan]weather[/cyan] is:')
+                    print(weather.get_temperature('celsius')['temp'])
+
+            # * Rain Forecast
+            if what_weather in supported_types[4]:
+                print('')
+                print('')
+
+            # * Fog
+            if what_weather in supported_types[5]:
+                pass
+
+            # * Clouds
+            if what_weather in supported_types[6]:
+                pass
+
+        get_weather()
+
+
+GW = GetWeather()
 
 if __name__ == '__main__':
-    dynamic_weather()
+    GW.weather()
+    repeat = ''
+    while True:
+        # * Asks to repeat the script.
+        repeat = input(
+            '\nDo you need any more information? (Y/N): ').lower()
+        if repeat[0] == 'y':
+            GW.weather()
+            continue
+        if repeat[0] == 'n':
+            break
